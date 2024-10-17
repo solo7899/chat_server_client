@@ -36,14 +36,23 @@ def broadcast_message(message: str):
 
 def stop():
     """
-        closes all the client connections
+        closes all the client connections (threads)
     """
-    for client in clients_nickname_hash.keys():
+    clients = list(clients_nickname_hash.keys())
+
+    for client in clients:
         client.send("Shutting down the server ...".encode("utf-8"))
         client.close()
         
-        if client in clients_nickname_hash:
+        if client in clients:
             clients_nickname_hash.pop(client)
+
+    for t in threading.enumerate():
+        if t is threading.main_thread():
+            continue
+        t.join()
+    
+    print('everything stopped ...')
 
 def main():
     with socket.socket(socket.AF_INET,  socket.SOCK_STREAM) as s:

@@ -28,8 +28,10 @@ def write(client : socket.socket, nickname: str):
         message = f'{nickname} : {input("> ")}'
         client.send(message.encode("utf-8"))
 
-def destroy_threads():
+def stop():
     for t in threading.enumerate():
+        if t is threading.main_thread():
+            continue
         t.join()
         
 
@@ -54,5 +56,5 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
         RUNNING = False
-        destroy_threads()
+        stop()
         sys.exit()
