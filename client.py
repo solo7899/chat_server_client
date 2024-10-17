@@ -15,7 +15,7 @@ def receive(client: socket.socket, nickname: str):
                 continue
             print(message)
         except Exception as e:
-            stop(e)
+            stop(f"recive error : {e}")
             break
 
 def write(client : socket.socket, nickname: str):
@@ -24,16 +24,16 @@ def write(client : socket.socket, nickname: str):
             message = f'{nickname} : {input("> ")}'
             client.send(message.encode("utf-8"))
         except Exception as e :
-            stop(e)
+            stop(f"write error : {e}")
             break
 
-def stop(e: Exception):
+def stop(e: str):
     # for t in threading.enumerate():
     #     t.join()
 
     client.close()
     
-    print("error: { " + str(e) + " }")
+    print(e)
     print("Disconnecting from the server...")
 
     sys.exit()
@@ -59,4 +59,4 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        stop(e)
+        stop("main error : {e}")

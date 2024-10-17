@@ -14,18 +14,23 @@ def handle_clients(client: socket.socket):
     """
     if len(clients_nickname_hash) > MAX_CAPACITY:
         client.send("server capacity is maxed out....")
+        client.close()
         return 
 
+    message = ""
     try:
         message = client.recv(1024).decode("utf-8")
         while message:
-            if len(message) > 0:
-                broadcast_message(message)
-            message = client.recv(1024).decode("utf-8")
+                if message:
+                    broadcast_message(message)
+                message = client.recv(1024).decode("utf-8")
     except Exception as e:
-            nickname = clients_nickname_hash.pop(client)
-            broadcast_message(f"{nickname} left the chat.")
-            print(e)
+            nickname = clients_nickname_hash.pop(client, None)
+            if nickname:
+                broadcast_message(f"{nickname} left the chat.")
+                client.close()
+            print(f"handling clients error : {e}")
+            return
 
 def broadcast_message(message: str):
     '''
@@ -47,10 +52,10 @@ def stop():
         if client in clients:
             clients_nickname_hash.pop(client)
 
-    for t in threading.enumerate():
-        if t is threading.main_thread():
-            continue
-        t.join()
+    # for t in threading.enumerate():
+    #     if t is threading.main_thread():
+    #         continue
+    #     t.join()
     
     print('everything stopped ...')
 
@@ -60,18 +65,18 @@ def main():
         s.listen()
 
         while True:
-            conn, address = s.accept()
+            client, address = s.accept()
             print(f"connected with {address}")
 
-            conn.send("NickName".encode("utf-8"))
-            nickname = conn.recv(1024).decode("utf-8")
-            clients_nickname_hash[conn] = nickname
+            client.send("NickName".encode("utf-8"))
+            nickname = client.recv(1024).decode("utf-8")
+            clients_nickname_hash[client] = nickname
             
-            print(f"conn : {conn}, nickname: {nickname}")
+            print(f"conn : {client}, nickname: {nickname}")
             broadcast_message(f"{nickname} joined the chat")
-            conn.send("connected to the server...".encode("utf-8"))
+            client.send("connected to the server...".encode("utf-8"))
 
-            t = threading.Thread(target=handle_clients, args=(conn, ))
+            t = threading.Thread(target=handle_clients, args=(client, ))
             t.start()
     
 
