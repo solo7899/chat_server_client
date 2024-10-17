@@ -3,7 +3,6 @@ import threading
 import sys
 
 HOST, PORT = "127.0.0.1", 5555
-RUNNING = True
 
 
 def receive(client: socket.socket, nickname: str):
@@ -15,24 +14,29 @@ def receive(client: socket.socket, nickname: str):
                 client.send(nickname.encode("utf-8"))
                 continue
             print(message)
-            
-        except Exception as e :
-            print(f"Error occured!!!\n\t Error: {e}")
-            client.close()
-            global RUNNING
-            RUNNING = False
+        except Exception as e:
+            stop(e)
             break
 
 def write(client : socket.socket, nickname: str):
-    while RUNNING:
-        message = f'{nickname} : {input("> ")}'
-        client.send(message.encode("utf-8"))
+    while True:
+        try:
+            message = f'{nickname} : {input("> ")}'
+            client.send(message.encode("utf-8"))
+        except Exception as e :
+            stop(e)
+            break
 
-def stop():
-    for t in threading.enumerate():
-        if t is threading.main_thread():
-            continue
-        t.join()
+def stop(e: Exception):
+    # for t in threading.enumerate():
+    #     t.join()
+
+    client.close()
+    
+    print("error: { " + str(e) + " }")
+    print("Disconnecting from the server...")
+
+    sys.exit()
         
 
 def main():
@@ -40,6 +44,7 @@ def main():
     while not nickname.strip():
         nickname = input("Enter a nickname: ")
 
+    global client
     client =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((HOST, PORT))
 
@@ -54,7 +59,4 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(e)
-        RUNNING = False
-        stop()
-        sys.exit()
+        stop(e)
