@@ -7,14 +7,17 @@ HOST, PORT = "127.0.0.1", 5555
 
 clients_nickname_hash : dict[socket.socket, str]= dict() 
 
+def lockOut_client(client: socket.socket, message: str):
+    client.send(str.encode("utf-8"))
+    client.close()
+
 
 def handle_clients(client: socket.socket):
     """
         accepts and handlels clients as much as the capacity allows 
     """
     if len(clients_nickname_hash) > MAX_CAPACITY:
-        client.send("server capacity is maxed out....")
-        client.close()
+        lockOut_client(client, "server capacity is maxed out....")
         return 
 
     message = ""
@@ -70,7 +73,11 @@ def main():
 
             client.send("NickName".encode("utf-8"))
             nickname = client.recv(1024).decode("utf-8")
+            if nickname in clients_nickname_hash.values():
+                lockOut_client(client, "username already taken.")
+                continue
             clients_nickname_hash[client] = nickname
+            client.send(f"Welcome to the chat {nickname}".encode("utf-8"))
             
             print(f"conn : {client}, nickname: {nickname}")
             broadcast_message(f"{nickname} joined the chat")

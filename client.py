@@ -12,7 +12,10 @@ def receive(client: socket.socket, nickname: str):
 
             if message == "NickName":
                 client.send(nickname.encode("utf-8"))
+                # message = client.recv(1024).decode("utf-8")
+                # print(message)
                 continue
+
             print(message)
         except Exception as e:
             stop(f"recive error : {e}")
@@ -48,8 +51,8 @@ def main():
     client =  socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client.connect((HOST, PORT))
 
-    recieve_message = threading.Thread(target=receive, args=(client, nickname))
-    recieve_message.start()
+    receive_message = threading.Thread(target=receive, args=(client, nickname))
+    receive_message.start()
 
     write_message = threading.Thread(target=write, args=(client, nickname))
     write_message.start()
